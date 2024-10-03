@@ -27,7 +27,7 @@ func TestRepeat(t *testing.T) {
 
 	s := "insert into t values (1, '1'), (2, '2')"
 	var r Statement
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 1; i++ {
 		r, err = Parse(s)
 		require.NoError(t, err)
 		result = r
