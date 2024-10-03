@@ -35,7 +35,7 @@ func TestRepeat(t *testing.T) {
 }
 
 func BenchmarkParser(b *testing.B) {
-	s := "insert into t values (1, '1'), (2, '2')"
+	s := "insert into t values (1, 1), (2, 2)"
 
 	var r Statement
 	for n := 0; n < b.N; n++ {

@@ -1292,8 +1292,8 @@ type yyParser interface {
 }
 
 type yyParserImpl struct {
-	lval  yySymType
-	stack [yyInitialStackSize]yySymType
+	lval  *yySymType
+	stack []*yySymType
 	char  int
 }
 
@@ -1302,7 +1302,7 @@ func (p *yyParserImpl) Lookahead() int {
 }
 
 func yyNewParser() yyParser {
-	return &yyParserImpl{}
+	return &yyParserImpl{lval: new(yySymType)}
 }
 
 const yyFlag = -1000
@@ -1430,8 +1430,8 @@ func yyParse(yylex yyLexer) int {
 
 func (yyrcvr *yyParserImpl) Parse(yylex yyLexer) int {
 	var yyn int
-	var yyVAL yySymType
-	var yyDollar []yySymType
+	var yyVAL = new(yySymType)
+	var yyDollar []*yySymType
 	_ = yyDollar // silence set and not used
 	yyS := yyrcvr.stack[:]
 
@@ -1462,13 +1462,22 @@ yystack:
 	}
 
 	yyp++
-	if yyp >= len(yyS) {
-		nyys := make([]yySymType, len(yyS)*2)
-		copy(nyys, yyS)
-		yyS = nyys
+	//if yyp >= len(yyS) {
+	//	nyys := make([]*yySymType, len(yyS)*2)
+	//	copy(nyys, yyS)
+	//	yyS = nyys
+	//	for i := range yyS {
+	//		if yyS[i] == nil {
+	//			yyS[i] = new(yySymType)
+	//		}
+	//	}
+	//}
+	yyVAL.yys = yystate
+	if yyp < len(yyS) {
+		yyS[yyp] = yyVAL
+	} else {
+		yyS = append(yyS, yyVAL)
 	}
-	yyS[yyp] = yyVAL
-	yyS[yyp].yys = yystate
 
 yynewstate:
 	yyn = int(yyPact[yystate])
@@ -1476,7 +1485,7 @@ yynewstate:
 		goto yydefault /* simple state */
 	}
 	if yyrcvr.char < 0 {
-		yyrcvr.char, yytoken = yylex1(yylex, &yyrcvr.lval)
+		yyrcvr.char, yytoken = yylex1(yylex, yyrcvr.lval)
 	}
 	yyn += yytoken
 	if yyn < 0 || yyn >= yyLast {
@@ -1499,7 +1508,7 @@ yydefault:
 	yyn = int(yyDef[yystate])
 	if yyn == -2 {
 		if yyrcvr.char < 0 {
-			yyrcvr.char, yytoken = yylex1(yylex, &yyrcvr.lval)
+			yyrcvr.char, yytoken = yylex1(yylex, yyrcvr.lval)
 		}
 
 		/* look through exception table */
@@ -1571,6 +1580,10 @@ yydefault:
 	/* reduction by production yyn */
 	if yyDebug >= 2 {
 		__yyfmt__.Printf("reduce %v in:\n\t%v\n", yyn, yyStatname(yystate))
+		for _, v := range yyS {
+			__yyfmt__.Printf("%d ", v.yys)
+		}
+		__yyfmt__.Print("\n")
 	}
 
 	yynt := yyn
@@ -1580,12 +1593,17 @@ yydefault:
 	yyp -= int(yyR2[yyn])
 	// yyp is now the index of $0. Perform the default action. Iff the
 	// reduced production is ε, $1 is possibly out of range.
-	if yyp+1 >= len(yyS) {
-		nyys := make([]yySymType, len(yyS)*2)
-		copy(nyys, yyS)
-		yyS = nyys
-	}
-	yyVAL = yyS[yyp+1]
+	//if yyp+1 >= len(yyS) {
+	//	nyys := make([]*yySymType, len(yyS), len(yyS)*2)
+	//	copy(nyys, yyS)
+	//	yyS = nyys
+	//}
+	//if yyp < len(yyS) {
+	//	yyS = yyS[:yyp+1]
+	//}
+	//yyVAL = yyS[yyp+1]
+	yyVAL = new(yySymType)
+	//yyS = append(yyS, yyVAL)
 
 	/* consult goto table to find next state */
 	yyn = int(yyR1[yyn])
